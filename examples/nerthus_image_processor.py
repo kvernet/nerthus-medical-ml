@@ -6,6 +6,7 @@ def get_data_path() -> str:
 
 def main() -> None:
     logger = setup_logging()
+    ensure_directory("images")
 
     data_path = get_data_path()
     logger.info(f"Dataset downloaded to: {data_path}")
@@ -44,8 +45,8 @@ def main() -> None:
         output_dir='images/sample_images'
     )
 
-if __name__ == "__main__":
-    ensure_directory("images")    
-    main()
+    print(f"\nImage processing completed!")
+    print(f"Check images/ directory for results.")
 
-    print("\nSee images/ for results.\n")
+if __name__ == "__main__":
+    main()
