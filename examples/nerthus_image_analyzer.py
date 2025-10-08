@@ -23,7 +23,7 @@ def main():
     analyzer.generate_report()
     
     print(f"\nAnalysis completed!")
-    print(f"Check outputs/ and images/ directories for results.")
+    print(f"Check outputs/ and outputs/images directories for results.")
 
 if __name__ == "__main__":
     main()

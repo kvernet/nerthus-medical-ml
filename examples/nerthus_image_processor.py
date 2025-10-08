@@ -6,7 +6,9 @@ def get_data_path() -> str:
 
 def main() -> None:
     logger = setup_logging()
-    ensure_directory("images")
+
+    output_dir = "outputs/images/"
+    ensure_directory(output_dir)
 
     data_path = get_data_path()
     logger.info(f"Dataset downloaded to: {data_path}")
@@ -33,7 +35,7 @@ def main() -> None:
         images = [processor.load_image(image_path=image_path) for image_path in images]
         processor.create_image_montage(
             images=images,
-            output_path=f"images/sample_images_montage_{class_label}.png",
+            output_path=f"{output_dir}/sample_images_montage_{class_label}.png",
             max_images=12
         )
 
@@ -42,11 +44,11 @@ def main() -> None:
     processor.save_sample_images(
         image_files=image_files,
         samples_per_class=5,
-        output_dir='images/sample_images'
+        output_dir=f'{output_dir}/sample_images'
     )
 
     print(f"\nImage processing completed!")
-    print(f"Check images/ directory for results.")
+    print(f"Check {output_dir} directory for results.")
 
 if __name__ == "__main__":
     main()

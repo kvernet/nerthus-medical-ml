@@ -166,7 +166,7 @@ class ImageProcessor:
             }
             
             # Histogram analysis
-            hist, bins = np.histogram(gray.flatten(), bins=256, range=[0, 256])
+            hist, _ = np.histogram(gray.flatten(), bins=256, range=[0, 256])
             hist = hist / hist.sum()  # Normalize
             features['histogram_skewness'] = stats.skew(hist)
             features['histogram_kurtosis'] = stats.kurtosis(hist)
@@ -289,9 +289,9 @@ class ImageProcessor:
         # Save montage
         cv2.imwrite(output_path, cv2.cvtColor(montage, cv2.COLOR_RGB2BGR))
     
-    def save_sample_images(self, image_files: Dict[str, List[str]], 
-                          samples_per_class: int = 5, 
-                          output_dir: str = "sample_images") -> None:
+    def save_sample_images(self, image_files: Dict[str, List[str]],
+                           output_dir: str,
+                           samples_per_class: int = 5) -> None:
         """
         Save sample images from each class for visualization.
         

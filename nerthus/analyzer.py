@@ -26,7 +26,7 @@ class NerthusAnalyzer:
     
     def __init__(self, data_path: Optional[str] = None, 
                  output_dir: str = "outputs", 
-                 images_dir: str = "images"):
+                 images_dir: str = "outputs/images"):
         """
         Initialize the Nerthus analyzer for image data.
         
