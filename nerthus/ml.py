@@ -6,13 +6,13 @@ from typing import Dict, Tuple, Any
 import joblib
 import os
 
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import xgboost as xgb
-#from sklearn.metrics import precision_score, recall_score, f1_score
+import json
 
 from .utils import setup_logging, ensure_directory
 
@@ -21,19 +21,23 @@ class NerthusML:
     Machine learning pipeline for BBPS classification using extracted image features.
     """
     
-    def __init__(self, models_dir: str = "outputs/models", results_dir: str = "outputs/results"):
+    def __init__(self, models_dir: str = "outputs/models",
+                 results_dir: str = "outputs/results",
+                 random_state: int = 42):
         """
         Initialize the ML pipeline.
         
         Args:
             models_dir: Directory to save trained models
             results_dir: Directory to save ML results and reports
+            random_state: Random sate
         """
         self.logger = setup_logging()
         self.models_dir = models_dir
         self.results_dir = results_dir
         self.models = {}
         self.results = {}
+        self.random_state = random_state
         
         # Create directories
         ensure_directory(models_dir)
@@ -158,7 +162,7 @@ class NerthusML:
         
         return analysis
     
-    def train_models(self, X: pd.DataFrame, y: pd.Series, test_size: float = 0.2, random_state: int = 42) -> Dict[str, Any]:
+    def train_models(self, X: pd.DataFrame, y: pd.Series, test_size: float = 0.2) -> Dict[str, Any]:
         """
         Train multiple classifiers and evaluate performance.
         
@@ -172,18 +176,13 @@ class NerthusML:
         
         # Split the data
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=random_state, stratify=y
+            X, y, test_size=test_size, random_state=self.random_state, stratify=y
         )
         
         self.logger.info(f"Train set: {X_train.shape}, Test set: {X_test.shape}")
         
         # Define models to train
-        models = {
-            'Random Forest': RandomForestClassifier(n_estimators=100, random_state=random_state),
-            'XGBoost': xgb.XGBClassifier(random_state=random_state),
-            'SVM': SVC(random_state=random_state),
-            'Logistic Regression': LogisticRegression(random_state=random_state, max_iter=1000)
-        }
+        models = self.get_models()
         
         # Train and evaluate each model
         results = {}
@@ -356,3 +355,157 @@ class NerthusML:
             f.write(f"  Weighted:  {report['weighted avg']['f1-score']:.3f}\n")
         
         self.logger.info(f"ML performance report saved to: {report_path}")
+    
+    def get_models(self, n_estimators: int = 100, max_iter: int = 1000) -> Dict[str, Any]:
+        return {
+            'Random Forest': RandomForestClassifier(n_estimators=n_estimators, random_state=self.random_state),
+            'XGBoost': xgb.XGBClassifier(random_state=self.random_state),
+            'SVM': SVC(random_state=self.random_state),
+            'Logistic Regression': LogisticRegression(random_state=self.random_state, max_iter=max_iter)
+        }
+    
+    def robust_validation(self, X: pd.DataFrame, y: pd.Series, cv_folds: int = 5) -> Dict[str, Any]:
+        """
+        Perform robust cross-validation to detect overfitting.
+        
+        Args:
+            X: Features DataFrame
+            y: Target Series
+            cv_folds: Number of cross-validation folds
+        """
+        self.logger.info("Performing robust cross-validation...")
+        
+        models = self.get_models()
+        
+        cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=self.random_state)
+        
+        cv_results = {}
+        for name, model in models.items():
+            self.logger.info(f"Cross-validating {name}...")
+            
+            # Cross-validation scores
+            cv_scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
+            
+            cv_results[name] = {
+                'cv_mean': cv_scores.mean(),
+                'cv_std': cv_scores.std(),
+                'cv_scores': cv_scores,
+                'train_test_gap': None  # Will be calculated after train/test split
+            }
+            
+            self.logger.info(f"  {name} CV accuracy: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
+        
+        # Compare with train/test split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=self.random_state, stratify=y)
+        
+        for name, model in models.items():
+            model.fit(X_train, y_train)
+            train_score = model.score(X_train, y_train)
+            test_score = model.score(X_test, y_test)
+            gap = train_score - test_score
+            
+            cv_results[name]['train_test_gap'] = gap
+            cv_results[name]['train_score'] = train_score
+            cv_results[name]['test_score'] = test_score
+            
+            self.logger.info(f"  {name} Train/Test: {train_score:.3f}/{test_score:.3f} (gap: {gap:.3f})")
+        
+        self.cv_results = cv_results
+        return cv_results
+    
+    def plot_validation_results(self):
+        """Plot cross-validation and train/test comparison."""
+        if not hasattr(self, 'cv_results'):
+            raise ValueError("Run robust_validation() first")
+        
+        _, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+        
+        # Plot 1: Cross-validation results
+        models = list(self.cv_results.keys())
+        cv_means = [self.cv_results[name]['cv_mean'] for name in models]
+        cv_stds = [self.cv_results[name]['cv_std'] for name in models]
+        
+        bars1 = ax1.bar(models, cv_means, yerr=cv_stds, capsize=5, 
+                       color=['#2E8B57', '#4682B4', '#B22222'])
+        ax1.set_title('Cross-Validation Performance\n(5-fold Stratified)', fontsize=14, fontweight='bold')
+        ax1.set_ylabel('Accuracy', fontsize=12)
+        ax1.set_ylim(0, 1.0)
+        ax1.tick_params(axis='x', rotation=45)
+        
+        # Add value labels
+        for bar, mean, std in zip(bars1, cv_means, cv_stds):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02, 
+                    f'{mean:.3f}±{std:.3f}', ha='center', va='bottom', fontsize=10)
+        
+        # Plot 2: Train/Test gap
+        train_scores = [self.cv_results[name]['train_score'] for name in models]
+        test_scores = [self.cv_results[name]['test_score'] for name in models]
+        gaps = [self.cv_results[name]['train_test_gap'] for name in models]
+        
+        x = np.arange(len(models))
+        width = 0.35
+        
+        bars2 = ax2.bar(x - width/2, train_scores, width, label='Train', alpha=0.7)
+        bars3 = ax2.bar(x + width/2, test_scores, width, label='Test', alpha=0.7)
+        
+        # Add gap annotations
+        for i, gap in enumerate(gaps):
+            ax2.text(i, max(train_scores[i], test_scores[i]) + 0.02, 
+                    f'gap: {gap:.3f}', ha='center', va='bottom', fontsize=10, color='red')
+        
+        ax2.set_title('Train vs Test Performance\n(Overfitting Detection)', fontsize=14, fontweight='bold')
+        ax2.set_ylabel('Accuracy', fontsize=12)
+        ax2.set_xticks(x)
+        ax2.set_xticklabels(models, rotation=45)
+        ax2.set_ylim(0, 1.0)
+        ax2.legend()
+        
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.results_dir, 'robust_validation.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def get_overfitting_analysis(self) -> Dict[str, Any]:
+        """
+        Analyze potential overfitting and provide recommendations.
+        """
+        if not hasattr(self, 'cv_results'):
+            raise ValueError("Run robust_validation() first")
+        
+        analysis = {
+            'overfitting_risk': 'Low',
+            'recommendations': [],
+            'cv_performance': {},
+            'train_test_gaps': {}
+        }
+        
+        for name, result in self.cv_results.items():
+            analysis['cv_performance'][name] = {
+                'cv_mean': result['cv_mean'],
+                'cv_std': result['cv_std'],
+                'train_test_gap': result['train_test_gap']
+            }
+            
+            analysis['train_test_gaps'][name] = result['train_test_gap']
+            
+            # Overfitting detection logic
+            if result['train_test_gap'] > 0.1:
+                analysis['overfitting_risk'] = 'High'
+                analysis['recommendations'].append(
+                    f"{name}: Large train-test gap ({result['train_test_gap']:.3f}) suggests overfitting"
+                )
+            elif result['train_test_gap'] > 0.05:
+                analysis['overfitting_risk'] = 'Medium'
+                analysis['recommendations'].append(
+                    f"{name}: Moderate train-test gap ({result['train_test_gap']:.3f})"
+                )
+        
+        if not analysis['recommendations']:
+            analysis['recommendations'].append("No significant overfitting detected")
+        
+        file_path = f"{self.results_dir}/overfitting_analysis.json"
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(analysis, f, indent=4)
+        
+        self.logger.info(f"ML overfitting analysis report saved to: {file_path}")
+        
+        return analysis

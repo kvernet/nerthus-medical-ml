@@ -10,7 +10,7 @@ def main():
     X, y = ml.prepare_features_target(df)
 
     # Train the models
-    ml.train_models(X=X, y=y, test_size=0.2, random_state=42)
+    ml.train_models(X=X, y=y, test_size=0.2)
 
     # Get & save the best model
     best_name, best_model = ml.get_best_model()
@@ -18,6 +18,10 @@ def main():
 
     # Genreate report
     ml.generate_report(X, y)
+
+    # Robust validation
+    ml.robust_validation(X, y)
+    ml.get_overfitting_analysis()
 
 if __name__ == "__main__":
     main()
