@@ -388,7 +388,7 @@ class NerthusAnalyzer:
         self.logger.info("ANOVA test completed")
         return statistical_results
     
-    def generate_report(self, sample_size=100) -> str:
+    def generate_report(self, sample_size: int=100, images_per_class: int=4) -> str:
         """
         Generate a comprehensive analysis report for the image dataset.
         
@@ -406,9 +406,9 @@ class NerthusAnalyzer:
         statistical_results = self.perform_statistical_analysis()
         
         # Create visualizations
-        self.create_dataset_overview(metadata_df)
+        self.create_dataset_overview(metadata_df=metadata_df)
         self.create_feature_analysis_plots()
-        self.create_sample_montage()
+        self.create_sample_montage(images_per_class=images_per_class)
         
         # Generate report
         report_lines = []
@@ -511,3 +511,53 @@ class NerthusAnalyzer:
         }
         
         return summary
+
+def main():
+    """Main entry point for the nerthus-analyze command."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Nerthus Medical Analysis')
+
+    parser.add_argument(
+        "-s", "--samples",
+        type=int,
+        default=100,
+        help="Sample size per class (default: 100)"
+    )
+
+    parser.add_argument(
+        "-n",
+        type=int,
+        default=4,
+        help="Number of images per class (default: 4)"
+    )
+    
+    args = parser.parse_args()
+    
+    from .analyzer import NerthusAnalyzer
+    analyzer = NerthusAnalyzer()
+    
+    print("Nerthus Medical Analysis")
+    print("=" * 40)
+    
+    # Load data
+    analyzer.load_data()
+
+    # Get summary
+    summary = analyzer.get_summary()
+    print(f"Dataset Summary:")
+    print(f"  Dataset name    : {summary['dataset_name']}")
+    print(f"  Total images    : {summary['total_images']}")
+    print(f"  BBPS classes    : {summary['bbps_classes']}")
+    print(f"  Images per class: {summary['images_per_class']}")
+    print(f"  Description     : {summary['description']}")
+    
+    # Generate comprehensive report
+    print("\nGenerating analysis report...")
+    analyzer.generate_report(args.samples, args.n)
+    
+    print(f"\nAnalysis completed!")
+    print(f"Check outputs/ and outputs/images directories for results.")
+
+if __name__ == "__main__":
+    main()

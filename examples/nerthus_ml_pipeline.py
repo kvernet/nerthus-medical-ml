@@ -21,7 +21,7 @@ def main():
 
     # Robust validation
     ml.robust_validation(X, y)
-    ml.get_overfitting_analysis()
+    ml.overfitting_analysis()
 
 if __name__ == "__main__":
     main()

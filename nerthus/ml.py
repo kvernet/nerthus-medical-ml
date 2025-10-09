@@ -464,7 +464,7 @@ class NerthusML:
         plt.savefig(os.path.join(self.results_dir, 'robust_validation.png'), dpi=300, bbox_inches='tight')
         plt.close()
     
-    def get_overfitting_analysis(self) -> Dict[str, Any]:
+    def overfitting_analysis(self) -> Dict[str, Any]:
         """
         Analyze potential overfitting and provide recommendations.
         """
@@ -509,3 +509,30 @@ class NerthusML:
         self.logger.info(f"ML overfitting analysis report saved to: {file_path}")
         
         return analysis
+    
+    def run_pipeline(self,
+                     features_path: str = "outputs/image_features.csv",
+                     target_col: str = 'bbps_class',
+                     test_size: float = 0.2,
+                     cv_folds: int = 5) -> Dict[str, Any]:
+        """
+        Run ML pipeline using EXISTING features.
+        
+        Args:            
+        """
+        self.logger.info("Starting ML pipeline...")
+        
+        # Load existing features
+        features_df = self.load_features_data(features_path=features_path)
+        
+        # Prepare and train
+        X, y = self.prepare_features_target(df=features_df, target_col=target_col)
+        self.train_models(X=X, y=y, test_size=test_size)
+        self.robust_validation(X=X, y=y, cv_folds=cv_folds)
+        self.generate_report(X, y)
+
+        # Save the best model
+        best_name, best_model = self.get_best_model()
+        self.save_model(best_model, best_name)
+        
+        return self.overfitting_analysis()
