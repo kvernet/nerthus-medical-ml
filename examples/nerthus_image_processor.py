@@ -1,8 +1,4 @@
-from nerthus import ImageProcessor, ensure_directory, setup_logging
-
-def get_data_path() -> str:
-    import kagglehub
-    return kagglehub.dataset_download("waltervanhuissteden/the-nerthus-dataset")
+from nerthus import ImageProcessor, get_data_path, ensure_directory, setup_logging
 
 def main() -> None:
     logger = setup_logging()

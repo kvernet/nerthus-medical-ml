@@ -2,6 +2,10 @@ import os
 import logging
 import pandas as pd
 
+def get_data_path() -> str:
+    import kagglehub
+    return kagglehub.dataset_download("waltervanhuissteden/the-nerthus-dataset")
+
 def ensure_directory(directory: str) -> None:
     """Ensure a directory exists."""
     os.makedirs(directory, exist_ok=True)
