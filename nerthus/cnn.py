@@ -1,4 +1,6 @@
 import os
+# Suppress TensorFlow WARNING
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # Force CPU only to avoid GPU issues
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -6,15 +8,12 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
+import random
 import matplotlib.pyplot as plt
-import pandas as pd
-from typing import Dict, List, Optional, Tuple, Any
-import logging
 from .utils import setup_logging
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import cv2
-from .processor import ImageProcessor
-from .utils import ensure_directory
+from .utils import cnn_generate_text_report, ensure_directory
 
 # Configure TensorFlow to use CPU and be less verbose
 tf.get_logger().setLevel('ERROR')
@@ -26,17 +25,30 @@ class NerthusCNN:
     Uses simplified architecture to avoid GPU issues.
     """
     
-    def __init__(self, input_shape=(150, 150, 3), num_classes=4, models_dir="outputs/models"):
+    def __init__(self,
+                 input_shape=(150, 150, 3),
+                 num_classes=4,
+                 random_state=32,
+                 output_dir="outputs/cnn"
+    ):
+        # Set random seeds globally
+        np.random.seed(random_state)
+        random.seed(random_state)
+        tf.random.set_seed(random_state)
+
         self.input_shape = input_shape
         self.num_classes = num_classes
-        self.models_dir = models_dir
+        self.random_state = random_state
+        self.models_dir = f"{output_dir}/models"
+        self.results_dir = f"{output_dir}/results"
         self.model = None
         self.history = None
         self.logger = setup_logging()
 
-        ensure_directory(models_dir)
+        ensure_directory(self.models_dir)
+        ensure_directory(self.results_dir)
         
-        self.logger.info("NerthusCNN initialized (CPU mode)")
+        self.logger.info("Nerthus CNN (CPU mode)")
     
     def build_simple_cnn(self):
         """
@@ -125,8 +137,49 @@ class NerthusCNN:
         self.logger.info("Improved CNN built successfully")
         return model
     
-    def create_data_generators(self, data_path: str, batch_size: int = 32, 
-                             validation_split: float = 0.2):
+    def build_tunable_cnn(self, dropout_rates=[0.3, 0.4, 0.4, 0.5]):
+        """
+        Build CNN with customizable dropout rates.
+        """
+        model = keras.Sequential([
+            # First block
+            layers.Conv2D(32, (3, 3), activation='relu', input_shape=self.input_shape),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D((2, 2)),
+            layers.Dropout(dropout_rates[0]),
+            
+            # Second block
+            layers.Conv2D(64, (3, 3), activation='relu'),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D((2, 2)),
+            layers.Dropout(dropout_rates[1]),
+            
+            # Third block
+            layers.Conv2D(128, (3, 3), activation='relu'),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D((2, 2)),
+            layers.Dropout(dropout_rates[2]),
+            
+            # Classifier
+            layers.GlobalAveragePooling2D(),
+            layers.Dropout(dropout_rates[3]),
+            layers.Dense(self.num_classes, activation='softmax')
+        ])
+        
+        model.compile(
+            optimizer=keras.optimizers.Adam(learning_rate=0.001),
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        self.model = model
+        self.logger.info("Tunable CNN with customizable dropout rates built successfully")
+        return model
+
+    def create_data_generators(self,
+                               data_path: str,
+                               batch_size: int = 32,
+                               validation_split: float = 0.2):
         """
         Create data generators for training and validation.
         
@@ -160,6 +213,7 @@ class NerthusCNN:
             batch_size=batch_size,
             class_mode='sparse',
             subset='training',
+            seed=self.random_state,
             shuffle=True
         )
         
@@ -170,6 +224,7 @@ class NerthusCNN:
             batch_size=batch_size,
             class_mode='sparse',
             subset='validation',
+            seed=self.random_state,
             shuffle=False
         )
         
@@ -243,7 +298,7 @@ class NerthusCNN:
         self.logger.info(f"Test loss: {loss:.4f}, Test accuracy: {accuracy:.4f}")
         return loss, accuracy
     
-    def plot_training_history(self, save_path: str = "cnn_training_history.png"):
+    def plot_training_history(self, file_name: str = "cnn_training_history.png"):
         """
         Plot training history for visualization.
         """
@@ -270,13 +325,15 @@ class NerthusCNN:
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
+        save_path = f"{self.results_dir}/{file_name}"
         plt.tight_layout()
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.close()
         
         self.logger.info(f"Training history plot saved to: {save_path}")
+        return save_path
     
-    def save_model(self, model_name: str = "nerthus_cnn"):
+    def save_model(self, model_name: str = "nerthus_cnn.keras"):
         """
         Save the trained model using modern Keras format.
         """
@@ -284,7 +341,7 @@ class NerthusCNN:
             raise ValueError("No model to save. Train the model first.")
         
         # Use modern .keras format instead of .h5
-        model_path = os.path.join(self.models_dir, f"{model_name}.keras")
+        model_path = os.path.join(self.models_dir, f"{model_name}")
         self.model.save(model_path)
         self.logger.info(f"Model saved to: {model_path}")
         return model_path
@@ -300,10 +357,25 @@ class NerthusCNN:
 
 def main():
     """Main entry point for the nerthus-cnn command."""
+    from .utils import get_data_path
     import argparse
     
     parser = argparse.ArgumentParser(description='Nerthus Medical CNN Pipeline')
     
+    parser.add_argument(
+        "-c", "--num_classes",
+        type=int,
+        default=4,
+        help="Number of classes (default: 4)"
+    )
+
+    parser.add_argument(
+        "-s", "--random_state",
+        type=int,
+        default=42,
+        help="Random state (default: 42)"
+    )
+
     parser.add_argument(
         "-b", "--batch_size",
         type=int,
@@ -321,8 +393,15 @@ def main():
     parser.add_argument(
         "-e", "--epochs",
         type=int,
-        default=250,
-        help="Number of epochs (default: 250)"
+        default=200,
+        help="Number of epochs (default: 200)"
+    )
+
+    parser.add_argument(
+        "-o", "--output_dir",
+        type=str,
+        default="outputs/cnn",
+        help="Output directory (default: outputs/cnn)"
     )
 
     args = parser.parse_args()
@@ -330,16 +409,23 @@ def main():
     print("NERTHUS MEDICAL ML - IMPROVED CNN PIPELINE")
     print("=" * 45)
     
-    from .utils import get_data_path
     data_path = get_data_path()
     data_path = f"{data_path}/nerthus-dataset-frames/nerthus-dataset-frames"
 
     # Initialize improved CNN
-    cnn = NerthusCNN(input_shape=(150, 150, 3))
+    cnn = NerthusCNN(
+        input_shape=(150, 150, 3),
+        num_classes=args.num_classes,
+        random_state=args.random_state,
+        output_dir=args.output_dir
+    )
     
     # Build improved architecture
-    print("🤖 Building improved CNN with regularization...")
-    cnn.build_improved_cnn()
+    print("🤖 Building tunable CNN with regularization...")
+    #cnn.build_improved_cnn()
+    model = cnn.build_tunable_cnn(
+        dropout_rates=[0.1, 0.2, 0.3, 0.2]
+    )
     
     # Create data generators with less augmentation
     train_gen, val_gen = cnn.create_data_generators(
@@ -349,8 +435,36 @@ def main():
     )
     
     # Train with improved settings
-    print("🚀 Training improved CNN...")
-    history = cnn.train(train_gen, val_gen, epochs=args.epochs)
+    print("🚀 Training tunable CNN...")
+    history = cnn.train(
+        train_generator=train_gen,
+        val_generator=val_gen,
+        epochs=args.epochs
+    )
+
+    # Evaluate model
+    print("📈 Evaluating model...")
+    _, accuracy = cnn.evaluate(
+        test_generator=val_gen
+    )
+
+    # Generate text report
+    cnn_generate_text_report(
+        accuracy=accuracy,
+        history=history,
+        train_gen=train_gen,
+        val_gen=val_gen,
+        input_shape=cnn.input_shape,
+        report_path=f"{args.output_dir}/cnn_performance_report.txt"
+    )
+
+    # Plot training history
+    history_path = cnn.plot_training_history(
+        file_name="nerthus_cnn_training_history.png"
+    )
+    
+    # Save & load the best model
+    model_path = cnn.save_model(model_name="nerthus_cnn.keras")
     
     # Get best validation accuracy
     best_val_accuracy = max(history.history['val_accuracy'])
@@ -360,18 +474,10 @@ def main():
     print(f"   Best Validation Accuracy: {best_val_accuracy:.1%}")
     print(f"   Final Validation Accuracy: {final_val_accuracy:.1%}")
     print(f"   Final Training Accuracy: {history.history['accuracy'][-1]:.1%}")
-    
-    # Compare with traditional ML
-    print(f"\n🏆 COMPARISON WITH TRADITIONAL ML:")
-    print(f"   Improved CNN Best: {best_val_accuracy:.1%}")
-    print(f"   Random Forest: 90.5%")
-    
-    if best_val_accuracy > 0.905:
-        print("   🎉 CNN OUTPERFORMS TRADITIONAL ML!")
-    else:
-        print("   🔄 CNN shows competitive performance")
-    
-    print(f"\n✅ Improved CNN pipeline complete!")
+
+    print(f"\n✅ CNN complete!")
+    print(f"   - Model saved: {model_path}")
+    print(f"   - Training plot: {history_path}")
 
 if __name__ == "__main__":
     main()

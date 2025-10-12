@@ -35,9 +35,11 @@ dev = [
 ]
 
 [project.scripts]
-nerthus = "nerthus.cli:main"
+nerthus-processor = "nerthus.processor:main"
 nerthus-analyze = "nerthus.analyzer:main"
+nerthus-ml = "nerthus.ml:main"
 nerthus-cnn = "nerthus.cnn:main"
+nerthus = "nerthus.cli:main"
 
 [tool.setuptools]
 packages = ["nerthus"]  # Explicitly tell setuptools which package to include

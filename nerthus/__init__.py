@@ -9,9 +9,11 @@ __email__ = "kinson.vernet@gmail.com"
 from .analyzer import NerthusAnalyzer
 from .ml import NerthusML
 from .processor import ImageProcessor
-from .utils import get_data_path, ensure_directory, save_dataframe, setup_logging
+from .utils import cnn_generate_text_report, get_data_path, ensure_directory, \
+    extract_cnn_performance, extract_ml_performance, save_dataframe, setup_logging
 
 __all__ = [
     "NerthusAnalyzer", "NerthusML", "ImageProcessor",
-    "get_data_path", "ensure_directory", "save_dataframe", "setup_logging"
+    "cnn_generate_text_report", "get_data_path", "ensure_directory",
+    "extract_cnn_performance", "extract_ml_performance", "save_dataframe", "setup_logging"
 ]

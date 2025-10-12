@@ -1,27 +1,38 @@
+"""
+Nerthus ML Pipeline:
+    Loading features data
+    Preparing features target
+    Training the models
+    Robust validation
+    Generating report
+    Getting and saving the best model
+"""
+
 from nerthus import NerthusML
 
 def main():
-    ml = NerthusML()
+    print("Nerthus Medical ML Pipeline")
+    print("=" * 40)
+    
+    output_dir = "outputs/ml/"
+    ml = NerthusML(
+        output_dir=output_dir,
+        random_state=42
+    )
 
-    # Load features
-    df = ml.load_features_data()
-
-    # Prepare features target
-    X, y = ml.prepare_features_target(df)
-
-    # Train the models
-    ml.train_models(X=X, y=y, test_size=0.2)
-
-    # Get & save the best model
-    best_name, best_model = ml.get_best_model()
-    ml.save_model(best_model, best_name)
-
-    # Genreate report
-    ml.generate_report(X, y)
-
-    # Robust validation
-    ml.robust_validation(X, y)
-    ml.overfitting_analysis()
+    analysis = ml.run_pipeline(
+        features_path="outputs/analysis/image_features.csv",
+        target_col='bbps_class',
+        test_size=0.2,
+        cv_folds=5
+    )
+    
+    best_name = ml.get_best_model()[0]
+    best_cv = ml.cv_results[best_name]['cv_mean']
+    
+    print(f"\n🎯 Best Model: {best_name} ({best_cv:.1%} cross-validated accuracy)")
+    print(f"🔍 Overfitting Risk: {analysis['overfitting_risk']}")
+    print(f"✅ Pipeline completed! Check {output_dir} directory for results.")
 
 if __name__ == "__main__":
     main()

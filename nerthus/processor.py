@@ -316,3 +316,83 @@ class ImageProcessor:
                     image_resized = cv2.resize(image, (300, 300))
                     output_path = os.path.join(class_dir, f"sample_{i+1}_{os.path.basename(image_path)}")
                     cv2.imwrite(output_path, cv2.cvtColor(image_resized, cv2.COLOR_RGB2BGR))
+
+
+def main() -> None:
+    """Main entry point for the nerthus-processor command."""
+    import argparse
+    from .utils import get_data_path, ensure_directory, setup_logging
+    parser = argparse.ArgumentParser(description='Nerthus Medical Image Processor')
+    
+    parser.add_argument(
+        "-m", "--max_images",
+        type=int,
+        default=12,
+        help="Max number of images (default: 12)"
+    )
+
+    parser.add_argument(
+        "-s", "--samples_per_class",
+        type=int,
+        default=5,
+        help="Number of samples per class (default: 5)"
+    )
+
+    parser.add_argument(
+        "-o", "--output_dir",
+        type=str,
+        default="outputs/processor/images/",
+        help="Output directory (default: outputs/processor/images/)"
+    )
+
+    args = parser.parse_args()
+
+    print("Nerthus Medical Image Processor")
+    print("=" * 40)
+
+    logger = setup_logging()
+
+    ensure_directory(args.output_dir)
+
+    data_path = get_data_path()
+    logger.info(f"Dataset downloaded to: {data_path}")
+
+    processor = ImageProcessor(data_path=data_path)
+
+    logger.info("Discovering image files")
+    image_files = processor.discover_image_files()
+
+    logger.info("Extract image metadata")
+    metadata = processor.extract_image_metadata(image_path=image_files['0'][0])
+    for k, v in metadata.items():
+        print(f"-- {k}: {v}")
+    
+    logger.info("Analyzing an image features")
+    image = processor.load_image(image_path=image_files['0'][0])
+    features = processor.analyze_image_features(image=image)
+    for k, v in features.items():
+        print(f"-- {k}: {v}")
+    
+    
+    logger.info("Creating image montage for each class")
+    for class_label, images in image_files.items():
+        images = [processor.load_image(image_path=image_path) for image_path in images]
+        processor.create_image_montage(
+            images=images,
+            output_path=f"{args.output_dir}/sample_images_montage_{class_label}.png",
+            max_images=args.max_images
+        )
+
+
+    logger.info("Saving sample images for each class")
+    processor.save_sample_images(
+        image_files=image_files,
+        output_dir=f'{args.output_dir}/sample_images',
+        samples_per_class=args.samples_per_class
+    )
+
+    print(f"\nImage processing completed!")
+    print(f"Check {args.output_dir} directory for results.")
+
+if __name__ == "__main__":
+    main()

@@ -1,9 +1,22 @@
+"""
+Image Processor:
+    Downloading dataset
+    Discovering image files
+    Extracting image metadata
+    Analyzing image features
+    Creating image montage for each class
+    Saving sample images for each class
+"""
+
 from nerthus import ImageProcessor, get_data_path, ensure_directory, setup_logging
 
 def main() -> None:
+    print("Nerthus Medical Image Processor")
+    print("=" * 40)
+
     logger = setup_logging()
 
-    output_dir = "outputs/images/"
+    output_dir = "outputs/processor/images/"
     ensure_directory(output_dir)
 
     data_path = get_data_path()
@@ -14,7 +27,7 @@ def main() -> None:
     logger.info("Discovering image files")
     image_files = processor.discover_image_files()
 
-    logger.info("Extract an image metadata")
+    logger.info("Extract image metadata")
     metadata = processor.extract_image_metadata(image_path=image_files['0'][0])
     for k, v in metadata.items():
         print(f"-- {k}: {v}")
@@ -39,8 +52,8 @@ def main() -> None:
     logger.info("Saving sample images for each class")
     processor.save_sample_images(
         image_files=image_files,
-        samples_per_class=5,
-        output_dir=f'{output_dir}/sample_images'
+        output_dir=f'{output_dir}/sample_images',
+        samples_per_class=5
     )
 
     print(f"\nImage processing completed!")

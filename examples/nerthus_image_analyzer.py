@@ -1,9 +1,19 @@
+"""
+Nerthus Analyzer:
+    Loading images
+    Getting summary
+    Generating report
+"""
+
 from nerthus import NerthusAnalyzer
 
 def main():
-    analyzer = NerthusAnalyzer()
+    output_dir="outputs/analysis/"
+    analyzer = NerthusAnalyzer(
+        random_state=42,
+        output_dir=output_dir)
     
-    print("Nerthus Medical ML - Analysis Mode")
+    print("Nerthus Medical Analysis")
     print("=" * 40)
     
     # Load data
@@ -20,10 +30,13 @@ def main():
     
     # Generate comprehensive report
     print("\nGenerating analysis report...")
-    analyzer.generate_report()
+    analyzer.generate_report(
+        sample_size=200,
+        images_per_class=4
+    )
     
     print(f"\nAnalysis completed!")
-    print(f"Check outputs/ and outputs/images directories for results.")
+    print(f"Check {output_dir} directory for results.")
 
 if __name__ == "__main__":
     main()

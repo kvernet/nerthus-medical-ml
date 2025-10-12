@@ -25,8 +25,8 @@ class NerthusAnalyzer:
     """
     
     def __init__(self, data_path: Optional[str] = None, 
-                 output_dir: str = "outputs", 
-                 images_dir: str = "outputs/images"):
+                 random_state: int = 69,
+                 output_dir: str = "outputs/analysis"):
         """
         Initialize the Nerthus analyzer for image data.
         
@@ -35,9 +35,11 @@ class NerthusAnalyzer:
             output_dir: Directory to save analysis outputs.
             images_dir: Directory to save generated images.
         """
+        np.random.seed(random_state)
         self.logger = setup_logging()
         self.output_dir = output_dir
-        self.images_dir = images_dir
+        self.random_state = random_state
+        self.images_dir = f"{output_dir}/images"
         self.data_path = data_path
         self.image_processor = None
         self.image_files = {}
@@ -46,8 +48,8 @@ class NerthusAnalyzer:
         
         # Create directories
         ensure_directory(output_dir)
-        ensure_directory(images_dir)
-        ensure_directory(os.path.join(images_dir, 'sample_images'))
+        ensure_directory(self.images_dir)
+        ensure_directory(os.path.join(self.images_dir, 'sample_images'))
         
         self.logger.info("NerthusAnalyzer initialized for image analysis")
     
@@ -519,10 +521,17 @@ def main():
     parser = argparse.ArgumentParser(description='Nerthus Medical Analysis')
 
     parser.add_argument(
-        "-s", "--samples",
+        "-s", "--random_state",
         type=int,
-        default=100,
-        help="Sample size per class (default: 100)"
+        default=42,
+        help="Random state (default: 42)"
+    )
+
+    parser.add_argument(
+        "-p", "--samples",
+        type=int,
+        default=200,
+        help="Sample size per class (default: 200)"
     )
 
     parser.add_argument(
@@ -531,11 +540,20 @@ def main():
         default=4,
         help="Number of images per class (default: 4)"
     )
+
+    parser.add_argument(
+        "-o", "--output_dir",
+        type=str,
+        default="outputs/analysis/",
+        help="Output directory (default: outputs/analysis/)"
+    )
     
     args = parser.parse_args()
     
     from .analyzer import NerthusAnalyzer
-    analyzer = NerthusAnalyzer()
+    analyzer = NerthusAnalyzer(
+        random_state=args.random_state,
+        output_dir=args.output_dir)
     
     print("Nerthus Medical Analysis")
     print("=" * 40)
@@ -554,10 +572,10 @@ def main():
     
     # Generate comprehensive report
     print("\nGenerating analysis report...")
-    analyzer.generate_report(args.samples, args.n)
+    analyzer.generate_report(sample_size=args.samples, images_per_class=args.n)
     
     print(f"\nAnalysis completed!")
-    print(f"Check outputs/ and outputs/images directories for results.")
+    print(f"Check {args.output_dir} directory for results.")
 
 if __name__ == "__main__":
     main()

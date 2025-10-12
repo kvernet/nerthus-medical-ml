@@ -21,31 +21,32 @@ class NerthusML:
     Machine learning pipeline for BBPS classification using extracted image features.
     """
     
-    def __init__(self, models_dir: str = "outputs/models",
-                 results_dir: str = "outputs/results",
-                 random_state: int = 42):
+    def __init__(self,
+                 output_dir: str = "outputs/ml/",
+                 random_state: int = 32):
         """
         Initialize the ML pipeline.
         
         Args:
-            models_dir: Directory to save trained models
-            results_dir: Directory to save ML results and reports
+            output_dir: Output directory
             random_state: Random sate
         """
         self.logger = setup_logging()
-        self.models_dir = models_dir
-        self.results_dir = results_dir
+        self.models_dir = f"{output_dir}/models"
+        self.results_dir = f"{output_dir}/results"
         self.models = {}
         self.results = {}
         self.random_state = random_state
         
         # Create directories
-        ensure_directory(models_dir)
-        ensure_directory(results_dir)
+        ensure_directory(self.models_dir)
+        ensure_directory(self.results_dir)
         
-        self.logger.info("NerthusML pipeline initialized")
+        self.logger.info("NerthusML pipeline ML initialized")
     
-    def load_features_data(self, features_path: str = "outputs/image_features.csv") -> pd.DataFrame:
+    def load_features_data(self,
+                           features_path: str = "outputs/analysis/image_features.csv"
+    ) -> pd.DataFrame:
         """
         Load the extracted image features for ML training.
         
@@ -511,7 +512,7 @@ class NerthusML:
         return analysis
     
     def run_pipeline(self,
-                     features_path: str = "outputs/image_features.csv",
+                     features_path: str = "outputs/analysis/image_features.csv",
                      target_col: str = 'bbps_class',
                      test_size: float = 0.2,
                      cv_folds: int = 5) -> Dict[str, Any]:
@@ -536,3 +537,78 @@ class NerthusML:
         self.save_model(best_model, best_name)
         
         return self.overfitting_analysis()
+
+def main():
+    """Main entry point for the nerthus-ml command."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Nerthus Medical ML Pipeline')
+    
+    parser.add_argument(
+        "-f", "--features_path",
+        type=str,
+        default="outputs/analysis/image_features.csv",
+        help="Features path (default: outputs/analysis/image_features.csv)"
+    )
+
+    parser.add_argument(
+        "-t", "--target_col",
+        type=str,
+        default='bbps_class',
+        help="Target column (default: bbps_class)"
+    )
+
+    parser.add_argument(
+        "-e", "--test_size",
+        type=float,
+        default=0.2,
+        help="Test dataset size (default: 0.2)"
+    )
+
+    parser.add_argument(
+        "-l", "--cv_folds",
+        type=int,
+        default=5,
+        help="cv folds (default: 5)"
+    )
+    
+    parser.add_argument(
+        "-s", "--random_state",
+        type=int,
+        default=42,
+        help="Random sate (default: 42)"
+    )
+
+    parser.add_argument(
+        "-o", "--output_dir",
+        type=str,
+        default="outputs/ml/",
+        help="Output directory (default: outputs/ml/)"
+    )
+    
+    args = parser.parse_args()
+    
+    print("Nerthus Medical ML Pipeline")
+    print("=" * 40)
+    
+    ml = NerthusML(
+        output_dir=args.output_dir,
+        random_state=args.random_state
+    )
+
+    analysis = ml.run_pipeline(
+        features_path=args.features_path,
+        target_col=args.target_col,
+        test_size=args.test_size,
+        cv_folds=args.cv_folds
+    )
+    
+    best_name = ml.get_best_model()[0]
+    best_cv = ml.cv_results[best_name]['cv_mean']
+    
+    print(f"\n🎯 Best Model: {best_name} ({best_cv:.1%} cross-validated accuracy)")
+    print(f"🔍 Overfitting Risk: {analysis['overfitting_risk']}")
+    print(f"✅ Pipeline completed! Check {args.output_dir} directory for results.")
+
+if __name__ == "__main__":
+    main()
