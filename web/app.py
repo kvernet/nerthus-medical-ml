@@ -6,6 +6,8 @@ from PIL import Image
 
 # Import our model loader
 from loader import modelLoader
+from utils import extract_cnn_performance, extract_dataset_info, \
+    extract_ml_performance, get_features
 
 # Set page config
 st.set_page_config(
@@ -59,6 +61,13 @@ def main():
         with st.spinner("🔄 Loading AI models... This may take a moment."):
             modelLoader.load_models("XGBoost.joblib", "CNN.keras")
     
+    cnn_performance = extract_cnn_performance("static/cnn_performance_report.txt")
+    ml_performance = extract_ml_performance("static/ml_performance_report.txt")
+    # in percentage
+    ml_performance = {model: round(acc * 100, 1) for model, acc in ml_performance.items()}
+    features = get_features("static/image_features.csv")
+    total_images, class_counts = extract_dataset_info("static/analysis_report.txt")
+    
     # Header
     st.markdown('<h1 class="main-header">🏥 Nerthus Medical ML</h1>', unsafe_allow_html=True)
     st.markdown("### Automated Bowel Preparation Quality Assessment")
@@ -71,18 +80,149 @@ def main():
     )
     
     if app_mode == "🏠 Overview":
-        show_overview()
+        show_overview(cnn_performance, ml_performance, features, total_images, class_counts)
     elif app_mode == "📊 Model Performance":
-        show_model_performance()
+        show_model_performance(cnn_performance, ml_performance)
     elif app_mode == "🤖 Live Demo":
-        show_live_demo()
+        show_live_demo(cnn_performance, ml_performance)
     elif app_mode == "📈 Technical Details":
-        show_technical_details()
+        show_technical_details(ml_performance, features)
     elif app_mode == "🏥 Medical Context":
         show_medical_context()
 
-def show_live_demo():
+def show_overview(cnn_performance, ml_performance, features, total_images, class_counts):
+    st.markdown('<h2 class="section-header">Project Overview</h2>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([2, 1])    
+    cnn_accuracy = list(cnn_performance.values())[1]
+    ml_model, ml_accuracy = max(ml_performance.items(), key=lambda x: x[1])
+    cnn_gain = cnn_accuracy - ml_accuracy
+    n_features = len(features)
+    min_class = 0
+    max_class = len(class_counts) - 1 + min_class
+    
+    with col1:
+        st.markdown(f"""
+        ### 🎯 Project Summary
+        
+        This web application demonstrates a state-of-the-art medical AI system for 
+        **automated bowel preparation quality assessment** using colonoscopy images.
+        
+        **Key Features:**
+        - 🏥 **Medical Grade**: {cnn_accuracy}% accurate BBPS scoring
+        - 🤖 **Dual Approach**: Both traditional ML and Deep Learning
+        - ⚡ **Real-time**: Instant predictions on new images
+        - 📊 **Comprehensive**: Full model analysis and comparison
+        
+        **Clinical Impact:**
+        - Reduces inter-observer variability in colonoscopy quality assessment
+        - Enables standardized bowel preparation scoring
+        - Supports clinical decision making
+        """)
+    
+    with col2:
+        # Placeholder for project architecture image
+        st.info(f"""
+        **Project Architecture:**
+        - Traditional ML: {ml_model}
+        - Deep Learning: Custom CNN
+        - {n_features} Medical Image Features
+        - Production-ready Pipeline
+        """)
+    
+    # Key metrics
+    st.markdown("### 🏆 Key Performance Metrics")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("CNN Accuracy", f"{cnn_accuracy}%", f"+{cnn_gain:.1f}% vs ML")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("ML", f"{ml_accuracy}%", "Traditional ML")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("Training Images", f"{total_images}", "Medical Dataset")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.metric("BBPS Classes", f"{len(class_counts)}", f"{min_class}-{max_class} Scale")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+def show_model_performance(cnn_performance, ml_performance):
+    st.markdown('<h2 class="section-header">Model Performance Comparison</h2>', unsafe_allow_html=True)
+    best_ml_model, _ = max(ml_performance.items(), key=lambda x: x[1])
+    
+    performances = ml_performance
+    cnn_accuracy = list(cnn_performance.values())[1]
+    performances['CNN'] = cnn_accuracy
+    # In range [0, 1] for the plot
+    performances = {name: round(0.01 * accur, 3) for name, accur in performances.items()}
+    model_names = list(performances.keys())
+    model_accuracies = list(performances.values())
+    
+    # Model comparison data - USING YOUR ACTUAL RESULTS
+    models_data = {
+        'Model': model_names,
+        'Accuracy': model_accuracies,
+        'Type': ['Traditional ML', 'Traditional ML', 'Traditional ML', 'Traditional ML', 'Deep Learning'],
+        'Training Time (min)': [3, 4, 1, 2, 61]
+    }
+    df = pd.DataFrame(models_data)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Interactive bar chart
+        fig = px.bar(df, x='Model', y='Accuracy', color='Type',
+                    title='Model Accuracy Comparison (Your Actual Results)',
+                    color_discrete_map={'Deep Learning': '#FFD700', 'Traditional ML': '#2E8B57'})
+        fig.update_layout(yaxis_tickformat='.1%', yaxis_range=[0, 1])
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        # Performance metrics
+        st.markdown("### 📊 Detailed Performance")
+        
+        # Create a nice table
+        fig = go.Figure(data=[go.Table(
+            header=dict(values=['Model', 'Accuracy', 'Training Time'],
+                        fill_color='#2E8B57',
+                        align='left',
+                        font=dict(color='white', size=12)),
+            cells=dict(values=[df.Model, 
+                             [f'{acc:.1%}' for acc in df.Accuracy],
+                             [f'{time} min' for time in df['Training Time (min)']],
+                            ],
+                      align='left'))
+        ])
+        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Feature importance - USING YOUR ACTUAL TOP FEATURES
+    st.markdown("### 🔍 Feature Importance Analysis")
+    
+    image = Image.open(f"static/feature_importance_{str.lower(best_ml_model)}.png")
+    fig = px.imshow(image)
+    fig.update_layout(
+        width=800,
+        height=800,
+        xaxis=dict(showticklabels=False, visible=False),
+        yaxis=dict(showticklabels=False, visible=False),
+        margin=dict(l=0, r=0, t=0, b=0)  # Optional: remove padding
+    )
+    st.plotly_chart(fig)
+
+def show_live_demo(cnn_performance, ml_performance):
     st.markdown('<h2 class="section-header">🤖 Live Prediction Demo</h2>', unsafe_allow_html=True)
+    
+    best_ml_model, best_ml_accuracy = max(ml_performance.items(), key=lambda x: x[1])
+    cnn_accuracy = list(cnn_performance.values())[1]
     
     # Check model availability
     available_models = modelLoader.get_available_models()
@@ -195,7 +335,7 @@ def show_live_demo():
             with st.expander(f"📊 BBPS {score}"):
                 st.write(description)
         
-        st.markdown("""
+        st.markdown(f"""
         ### 💡 Clinical Notes
         
         - **BBPS** = Boston Bowel Preparation Scale
@@ -204,9 +344,102 @@ def show_live_demo():
         - Quality affects adenoma detection rates by 20-50%
         
         ### 🎯 Model Performance
-        - **CNN**: 92.4% validation accuracy
-        - **ML**: 90.5% cross-validation accuracy
-        - Both models trained on 5,525 medical images
+        - **CNN**: {cnn_accuracy}% validation accuracy
+        - **ML**: {best_ml_accuracy}% cross-validation accuracy
+        """)
+
+def show_technical_details(ml_performance, features):
+    st.markdown('<h2 class="section-header">📈 Technical Implementation</h2>', unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["🧠 ML Pipeline", "🕸️ CNN Architecture", "⚙️ Feature Engineering"])
+    
+    md = ''    
+    for model, acc in ml_performance.items():
+        md += f"- **{model}**: {acc:.1f}%\n"
+    
+    with tab1:
+        st.markdown("""
+        ### Traditional Machine Learning Pipeline
+        
+        **Algorithms Implemented:**
+        """)
+        
+        st.markdown(f"""
+            {md}
+        """)
+        
+        st.markdown("""
+        **Validation Strategy:**
+        - 5-fold stratified cross-validation
+        - Train-test split with class balancing
+        - Overfitting detection with performance gaps
+        
+        **Key Features:**
+        ```python
+        # Example feature extraction
+        features = {
+            'texture': ['contrast', 'homogeneity', 'energy', 'correlation'],
+            'color': ['hue_mean', 'saturation_mean', 'l_mean', 'a_mean', 'b_mean'],
+            'edges': ['edge_density', 'sharpness'],
+            'intensity': ['mean_intensity', 'std_intensity', 'min_intensity']
+        }
+        ```
+        """)
+    
+    with tab2:
+        st.markdown("""
+        ### Deep Learning CNN Architecture
+        
+        **Model Architecture:**
+        ```python
+        Model: "sequential"
+        _________________________________________________________________
+        Layer (type)                 Output Shape              Param #   
+        =================================================================
+        conv2d (Conv2D)              (None, 148, 148, 32)      896       
+        max_pooling2d (MaxPooling2D) (None, 74, 74, 32)        0         
+        dropout (Dropout)            (None, 74, 74, 32)        0         
+        conv2d_1 (Conv2D)            (None, 72, 72, 64)        18496     
+        max_pooling2d_1 (MaxPooling2 (None, 36, 36, 64)        0         
+        dropout_1 (Dropout)          (None, 36, 36, 64)        0         
+        conv2d_2 (Conv2D)            (None, 34, 34, 128)       73856     
+        max_pooling2d_2 (MaxPooling2 (None, 17, 17, 128)       0         
+        global_average_pooling2d (Gl (None, 128)               0         
+        dropout_2 (Dropout)          (None, 128)               0         
+        dense (Dense)                (None, 4)                 516       
+        =================================================================
+        Total params: 93,764
+        ```
+        
+        **Training Configuration:**
+        - Optimizer: Adam (lr=0.001)
+        - Loss: Sparse Categorical Crossentropy  
+        - Callbacks: Early stopping, LR reduction
+        - Regularization: Dropout, batch normalization
+        """)
+    
+    with tab3:
+        st.markdown(f"""
+        ### Medical Image Feature Engineering
+        
+        **{len(features)} Handcrafted Features:**
+        
+        **Texture Analysis (GLCM):**
+        - Contrast, Homogeneity, Energy, Correlation
+        
+        **Color Space Analysis:**
+        - RGB: Mean intensities
+        - HSV: Hue, Saturation, Value means  
+        - LAB: L*, a*, b* means
+        
+        **Edge and Shape Analysis:**
+        - Edge density, Sharpness (Laplacian variance)
+        
+        **Intensity Statistics:**
+        - Mean, Standard deviation, Min, Max, Median
+        
+        **Advanced Features:**
+        - Image entropy, LBP entropy, Blob count
         """)
 
 def display_prediction_results(results, model_choice):
@@ -296,215 +529,6 @@ def display_single_prediction(result, model_name, color):
         st.markdown("🔴 **Low confidence** - Consider re-analyzing")
     
     st.markdown('</div>', unsafe_allow_html=True)
-
-def show_overview():
-    st.markdown('<h2 class="section-header">Project Overview</h2>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.markdown("""
-        ### 🎯 Project Summary
-        
-        This web application demonstrates a state-of-the-art medical AI system for 
-        **automated bowel preparation quality assessment** using colonoscopy images.
-        
-        **Key Features:**
-        - 🏥 **Medical Grade**: 92.4% accurate BBPS scoring
-        - 🤖 **Dual Approach**: Both traditional ML and Deep Learning
-        - ⚡ **Real-time**: Instant predictions on new images
-        - 📊 **Comprehensive**: Full model analysis and comparison
-        
-        **Clinical Impact:**
-        - Reduces inter-observer variability in colonoscopy quality assessment
-        - Enables standardized bowel preparation scoring
-        - Supports clinical decision making
-        """)
-    
-    with col2:
-        # Placeholder for project architecture image
-        st.info("""
-        **Project Architecture:**
-        - Traditional ML: ML, XGBoost
-        - Deep Learning: Custom CNN
-        - 22 Medical Image Features
-        - Production-ready Pipeline
-        """)
-    
-    # Key metrics
-    st.markdown("### 🏆 Key Performance Metrics")
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("CNN Accuracy", "92.4%", "+1.9% vs RF")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("ML", "90.5%", "Traditional ML")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Training Images", "5,525", "Medical Dataset")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("BBPS Classes", "4", "0-3 Scale")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-def show_model_performance():
-    st.markdown('<h2 class="section-header">Model Performance Comparison</h2>', unsafe_allow_html=True)
-    
-    # Model comparison data - USING YOUR ACTUAL RESULTS
-    models_data = {
-        'Model': ['CNN Champion', 'ML', 'XGBoost', 'Logistic Regression', 'SVM'],
-        'Accuracy': [0.924, 0.905, 0.897, 0.805, 0.625],
-        'Type': ['Deep Learning', 'Traditional ML', 'Traditional ML', 'Traditional ML', 'Traditional ML'],
-        'Training Time (min)': [61, 3, 4, 1, 2]
-    }
-    df = pd.DataFrame(models_data)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Interactive bar chart
-        fig = px.bar(df, x='Model', y='Accuracy', color='Type',
-                    title='Model Accuracy Comparison (Your Actual Results)',
-                    color_discrete_map={'Deep Learning': '#FFD700', 'Traditional ML': '#2E8B57'})
-        fig.update_layout(yaxis_tickformat='.1%', yaxis_range=[0, 1])
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        # Performance metrics
-        st.markdown("### 📊 Detailed Performance")
-        
-        # Create a nice table
-        fig = go.Figure(data=[go.Table(
-            header=dict(values=['Model', 'Accuracy', 'Training Time'],
-                        fill_color='#2E8B57',
-                        align='left',
-                        font=dict(color='white', size=12)),
-            cells=dict(values=[df.Model, 
-                             [f'{acc:.1%}' for acc in df.Accuracy],
-                             [f'{time} min' for time in df['Training Time (min)']],
-                            ],
-                      align='left'))
-        ])
-        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Feature importance - USING YOUR ACTUAL TOP FEATURES
-    st.markdown("### 🔍 Feature Importance Analysis")
-    
-    features_data = {
-        'Feature': ['min_intensity', 'hue_mean', 'homogeneity', 'edge_density', 'saturation_mean',
-                   'contrast', 'energy', 'correlation', 'sharpness', 'image_entropy'],
-        'Importance': [0.125, 0.098, 0.087, 0.076, 0.065, 0.054, 0.048, 0.042, 0.037, 0.032]
-    }
-    features_df = pd.DataFrame(features_data)
-    
-    fig = px.bar(features_df.head(8), x='Importance', y='Feature', 
-                 orientation='h', title='Top 8 Most Important Features (From Your Analysis)',
-                 color='Importance', color_continuous_scale='Viridis')
-    st.plotly_chart(fig, use_container_width=True)
-
-def show_technical_details():
-    st.markdown('<h2 class="section-header">📈 Technical Implementation</h2>', unsafe_allow_html=True)
-    
-    tab1, tab2, tab3 = st.tabs(["🧠 ML Pipeline", "🕸️ CNN Architecture", "⚙️ Feature Engineering"])
-    
-    with tab1:
-        st.markdown("""
-        ### Traditional Machine Learning Pipeline
-        
-        **Algorithms Implemented:**
-        - ML (90.5% accuracy)
-        - XGBoost (89.7% accuracy) 
-        - Logistic Regression (80.5% accuracy)
-        - SVM (62.5% accuracy)
-        
-        **Validation Strategy:**
-        - 5-fold stratified cross-validation
-        - Train-test split with class balancing
-        - Overfitting detection with performance gaps
-        
-        **Key Features:**
-        ```python
-        # Example feature extraction
-        features = {
-            'texture': ['contrast', 'homogeneity', 'energy', 'correlation'],
-            'color': ['hue_mean', 'saturation_mean', 'l_mean', 'a_mean', 'b_mean'],
-            'edges': ['edge_density', 'sharpness'],
-            'intensity': ['mean_intensity', 'std_intensity', 'min_intensity']
-        }
-        ```
-        """)
-    
-    with tab2:
-        st.markdown("""
-        ### Deep Learning CNN Architecture
-        
-        **Model Architecture:**
-        ```python
-        Model: "sequential"
-        _________________________________________________________________
-        Layer (type)                 Output Shape              Param #   
-        =================================================================
-        conv2d (Conv2D)              (None, 148, 148, 32)      896       
-        max_pooling2d (MaxPooling2D) (None, 74, 74, 32)        0         
-        dropout (Dropout)            (None, 74, 74, 32)        0         
-        conv2d_1 (Conv2D)            (None, 72, 72, 64)        18496     
-        max_pooling2d_1 (MaxPooling2 (None, 36, 36, 64)        0         
-        dropout_1 (Dropout)          (None, 36, 36, 64)        0         
-        conv2d_2 (Conv2D)            (None, 34, 34, 128)       73856     
-        max_pooling2d_2 (MaxPooling2 (None, 17, 17, 128)       0         
-        global_average_pooling2d (Gl (None, 128)               0         
-        dropout_2 (Dropout)          (None, 128)               0         
-        dense (Dense)                (None, 4)                 516       
-        =================================================================
-        Total params: 93,764
-        ```
-        
-        **Training Configuration:**
-        - Optimizer: Adam (lr=0.001)
-        - Loss: Sparse Categorical Crossentropy  
-        - Callbacks: Early stopping, LR reduction
-        - Regularization: Dropout, batch normalization
-        """)
-    
-    with tab3:
-        st.markdown("""
-        ### Medical Image Feature Engineering
-        
-        **22 Handcrafted Features:**
-        
-        **Texture Analysis (GLCM):**
-        - Contrast, Homogeneity, Energy, Correlation
-        
-        **Color Space Analysis:**
-        - RGB: Mean intensities
-        - HSV: Hue, Saturation, Value means  
-        - LAB: L*, a*, b* means
-        
-        **Edge and Shape Analysis:**
-        - Edge density, Sharpness (Laplacian variance)
-        
-        **Intensity Statistics:**
-        - Mean, Standard deviation, Min, Max, Median
-        
-        **Advanced Features:**
-        - Image entropy, LBP entropy, Blob count
-        
-        **Top 5 Most Predictive Features:**
-        1. `min_intensity` - Minimum image intensity
-        2. `hue_mean` - Average hue in HSV space  
-        3. `homogeneity` - Texture homogeneity
-        4. `edge_density` - Edge concentration
-        5. `saturation_mean` - Color saturation
-        """)
 
 def show_medical_context():
     st.markdown('<h2 class="section-header">🏥 Medical Background</h2>', unsafe_allow_html=True)
