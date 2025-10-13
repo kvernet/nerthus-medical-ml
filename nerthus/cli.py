@@ -44,13 +44,6 @@ def main():
     )
 
     parser.add_argument(
-        "-r", "--results_dir",
-        type=str,
-        default="outputs/results",
-        help="Directory to save ML results and reports (default: outputs/results)"
-    )
-
-    parser.add_argument(
         "-s", "--random_state",
         type=int,
         default=42,
@@ -65,7 +58,6 @@ def main():
     from .ml import NerthusML
     ml = NerthusML(
         models_dir=args.models_dir,
-        results_dir=args.results_dir,
         random_state=args.random_state
     )
 

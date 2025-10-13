@@ -12,7 +12,7 @@ import random
 import matplotlib.pyplot as plt
 from .utils import setup_logging
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import cv2
+
 from .utils import cnn_generate_text_report, ensure_directory
 
 # Configure TensorFlow to use CPU and be less verbose
@@ -332,7 +332,7 @@ class NerthusCNN:
         
         self.logger.info(f"Training history plot saved to: {save_path}")
         return save_path
-    
+        
     def save_model(self, model_name: str = "nerthus_cnn.keras"):
         """
         Save the trained model using modern Keras format.
