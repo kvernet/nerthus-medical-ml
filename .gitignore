@@ -1,2 +1,7 @@
 nerthus.egg-info
 __pycache__
+
+*.aux
+*.log
+*.out
+*.toc
