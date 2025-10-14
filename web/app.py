@@ -471,7 +471,7 @@ def display_prediction_results(results, model_choice):
             if cnn_class == rf_class:
                 st.success(f"✅ Models agree: BBPS Score {cnn_class}")
             else:
-                st.warning(f"⚠️ Models disagree: CNN={cnn_class}, RF={rf_class}")
+                st.warning(f"⚠️ Models disagree: CNN={cnn_class}, ML={rf_class}")
                 
     else:
         # Single model result - handle different naming cases

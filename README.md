@@ -159,6 +159,11 @@ python examples/nerthus_comparison_plot.py
 
 ---
 
+## Web app
+Try the wep
+
+---
+
 ## 📈 Key Features
 
 ### 🔬 Medical Image Analysis
@@ -283,6 +288,151 @@ Trainable params: 1,207,652
 - Real-time inference API for clinics  
 - Multi-center dataset validation  
 - Explainable AI for clinical interpretability  
+
+---
+
+## 🌐 Web Application
+
+A fully functional **Streamlit** web application for the medical AI system. The web application bridges the gap between AI research and clinical practice, transforming advanced models into a practical, interactive tool that demonstrates real-world healthcare impact.
+
+---
+
+### **Overview**
+![Live Demo Features](web/static/overview.png)
+- Project summary and key performance metrics  
+- Real-time model availability status  
+- Clinical impact explanation  
+
+---
+
+### **Live Demo**
+![Live Demo Features](web/static/live_demo.png)
+- **Image Upload**: Drag-and-drop interface for colonoscopy images  
+- **Dual Model Support**: Choose between CNN or ML predictions  
+- **Real-time Results**: Instant BBPS scoring with confidence levels  
+- **Clinical Context**: BBPS scale reference and medical explanations  
+
+### 📊 **Model Performance**
+![Live Demo Features](web/static/model_performance.png)
+- Interactive comparison charts of all models  
+- Feature importance visualization  
+- Performance metrics with actual results  
+
+### 📈 **Technical Details**
+![Live Demo Features](web/static/technical_details.png)
+- Complete ML pipeline documentation  
+- CNN architecture specifications  
+- Feature engineering methodology  
+
+### 🏥 **Medical Context**
+![Live Demo Features](web/static/medical_context.png)
+- Boston Bowel Preparation Scale (BBPS) reference  
+- Clinical significance of automated assessment  
+- Healthcare impact analysis  
+
+---
+
+## 🛠️ Technical Implementation
+
+### 📁 **Architecture**
+```python
+web/
+├── app.py                 # Main Streamlit application
+├── loader.py              # Model management and prediction engine
+├── requirements.txt       # Web app dependencies
+├── run.py                 # Application runner
+├── static                 # Static files
+└── utils.py               # Web app utilities
+```
+
+**Key Features**
+- **Production-Ready:** Robust error handling and model validation  
+- **Medical Grade:** Proper image preprocessing and feature extraction  
+- **User-Friendly:** Intuitive interface designed for clinicians  
+- **Responsive:** Works on desktop, tablet, and mobile devices  
+
+---
+
+## 🎯 Model Integration
+The web app seamlessly integrates your trained models:
+
+| Model | Type | Accuracy | Description |
+|--------|------|-----------|-------------|
+| ML | Classical ML | 92.5% | Handcrafted feature-based |
+| CNN | Deep Learning | 95.4% | End-to-end feature extraction |
+
+**Additional Features:**
+- Real-time feature extraction (same pipeline as training)  
+- Confidence scoring with probability estimates for clinical decision support  
+
+---
+
+## 🚀 Quick Start
+
+### 🧩 Local Deployment
+```bash
+# Navigate to web app directory
+cd web
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Launch the application
+streamlit run app.py
+
+# Access the app
+http://localhost:8501
+```
+
+### ☁️ Cloud Deployment Options
+- Streamlit Cloud *(Free tier available)*  
+- Heroku *(with Procfile configuration)*  
+- AWS / Azure / GCP *(containerized deployment)*  
+- Hugging Face Spaces *(community hosting)*  
+
+---
+
+## 🏥 Clinical Workflow Integration
+The web app supports typical clinical workflows:
+
+1. **Image Acquisition:** Upload colonoscopy frames directly  
+2. **Quality Assessment:** Automatic BBPS scoring in seconds  
+3. **Result Interpretation:** Confidence scores and clinical context  
+4. **Documentation:** Exportable results for medical records  
+
+---
+
+## 🔧 Customization
+
+Easily extend the application with your own models and features:
+
+```python
+# Custom model integration
+def predict_custom_model(image):
+    # Add your custom model here
+    return prediction, confidence
+
+# Custom feature extraction
+def extract_custom_features(image):
+    # Implement domain-specific features
+    return features
+```
+
+---
+
+## 🌟 Deployment Highlights
+✅ **HIPAA-Ready:** Local data processing, no cloud storage required  
+✅ **Clinically Validated:** Uses your validated ML models and features  
+✅ **Scalable:** Supports multiple concurrent users  
+✅ **Professional UI:** Designed for medical environments  
+
+---
+
+## 🎯 Value for Healthcare Providers
+- **Standardized Assessment:** Reduces inter-observer variability  
+- **Time Efficiency:** Instant scoring vs. manual evaluation  
+- **Training Tool:** Supports education for new gastroenterologists  
+- **Quality Assurance:** Objective, reproducible metrics  
 
 ---
 

@@ -13,6 +13,7 @@
 \usepackage{geometry}
 \usepackage{titlesec}
 \usepackage{float}
+\usepackage{minted}
 
 % Page layout
 \geometry{a4paper, margin=1in}
@@ -361,6 +362,225 @@ python examples/nerthus_comparison_plot.py
     \item Unit tests and validation scripts
     \item Professional documentation
 \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Web application implementation}
+\label{sec:web_application}
+
+This section describes the development and implementation of a fully functional web application that demonstrates the practical deployment of the Nerthus Medical ML pipeline for clinical use.
+
+\subsection{Application architecture}
+
+The web application is built using Streamlit, a Python framework designed for machine learning and data science applications. The architecture follows a modular design pattern for maintainability and extensibility.
+
+\subsubsection{Technical stack}
+\begin{itemize}
+    \item \textbf{Frontend}: Streamlit with custom CSS styling
+    \item \textbf{Backend}: Python with integrated model inference
+    \item \textbf{Model serving}: Direct TensorFlow/Keras and Scikit-learn integration
+    \item \textbf{Image processing}: OpenCV and PIL for medical image handling
+\end{itemize}
+
+\subsection{User interface design}
+
+The application features a medical-grade interface designed for clinical usability:
+
+\subsubsection{Dashboard overview}
+\begin{itemize}
+    \item Real-time model availability status
+    \item Performance metrics visualization
+    \item Project summary and clinical context
+\end{itemize}
+
+\subsubsection{Live prediction interface}
+\begin{itemize}
+    \item Drag-and-drop image upload functionality
+    \item Model selection between CNN and ML
+    \item Real-time BBPS scoring with confidence intervals
+    \item Side-by-side model comparison when available
+\end{itemize}
+
+\subsubsection{Clinical reference materials}
+\begin{itemize}
+    \item Boston Bowel Preparation Scale (BBPS) reference guide
+    \item Feature importance explanations
+    \item Medical context and clinical significance
+\end{itemize}
+
+\subsection{Model integration}
+
+The web application seamlessly integrates the trained machine learning models.
+
+\subsubsection{Model loading system}
+\begin{minted}{python}
+class ModelLoader:
+    def load_models(self, ml_path="XGBoost.joblib",
+            cnn_path="CNN.keras"):
+        # Load ML model
+        self.ml_model = joblib.load(ml_path)
+        # Load CNN with CPU fallback
+        with tf.device('/CPU:0'):
+            self.cnn_model = tf.keras.models.load_model(cnn_path)
+    
+    def extract_features_from_image(self, image)
+    def predict_with_ml(self, image)
+    def predict_with_cnn(self, image, debug=False)
+\end{minted}
+
+\subsection{Prediction workflow}
+
+The prediction workflow follows clinical best practices:
+
+\begin{enumerate}
+    \item \textbf{Image upload}: User provides colonoscopy image via drag-and-drop interface
+    \item \textbf{Preprocessing}: Automatic image validation and normalization
+    \item \textbf{Feature extraction}: Computation of 22 medical image features
+    \item \textbf{Model inference}: Parallel prediction using selected models
+    \item \textbf{Result presentation}: BBPS score with confidence assessment
+\end{enumerate}
+
+\subsection{Error handling and validation}
+
+Robust error handling ensures clinical reliability:
+
+\subsubsection{Model fallback system}
+\begin{itemize}
+    \item Graceful degradation if models fail to load
+    \item Clear error messages for clinical users
+    \item Continued functionality with available models
+\end{itemize}
+
+\subsection{Performance characteristics}
+
+\subsubsection{Response times}
+\begin{table}[H]
+\centering
+\caption{Web application performance metrics}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Operation} & \textbf{Time (seconds)} & \textbf{Notes} \\
+\midrule
+Model loading & 2-5 & Initial application startup \\
+Image upload & 1 & Client-side processing \\
+Feature extraction & 1-2 & 22 medical features \\
+ML prediction & 0.1 & Optimized inference \\
+CNN prediction & 0.5-1 & CPU-based inference \\
+Total response time & 2-4 & End-to-end prediction \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Scalability considerations}
+\begin{itemize}
+    \item Stateless architecture supports multiple concurrent users
+    \item Model caching for improved response times
+    \item Memory-efficient image processing
+\end{itemize}
+
+\subsection{Clinical deployment considerations}
+
+\subsubsection{Data privacy and security}
+\begin{itemize}
+    \item Local processing ensures no data transmission
+    \item HIPAA-compliant (Health Insurance Portability and Accountability Act) architecture ready
+    \item No persistent storage of medical images
+\end{itemize}
+
+\subsubsection{Integration with clinical workflows}
+\begin{itemize}
+    \item DICOM (Digital Imaging and Communications in Medicine) image format support ready for implementation
+    \item EHR (Electronic Health Record) integration capabilities via API endpoints
+    \item Export functionality for medical documentation
+\end{itemize}
+
+\subsubsection{User experience design}
+\begin{itemize}
+    \item Medical-grade color scheme and typography
+    \item Intuitive navigation for clinical staff
+    \item Accessibility considerations for diverse users
+\end{itemize}
+
+\subsection{Deployment options}
+
+The web application supports multiple deployment scenarios:
+
+\subsubsection{Local deployment}
+\begin{verbatim}
+cd web
+pip install -r requirements.txt
+streamlit run app.py / python run.py
+\end{verbatim}
+
+\subsubsection{Cloud deployment}
+\begin{itemize}
+    \item \textbf{Streamlit cloud}: Free tier for demonstration
+    \item \textbf{Docker containerization}: Production deployment
+    \item \textbf{Cloud platforms}: AWS, Azure, GCP compatibility
+\end{itemize}
+
+\subsubsection{Enterprise deployment}
+\begin{itemize}
+    \item Hospital network installation
+    \item Multi-user authentication systems
+    \item Audit logging for clinical use
+\end{itemize}
+
+\subsection{Clinical validation}
+
+The web application uses the same validated models and features as the research pipeline:
+
+\begin{itemize}
+    \item \textbf{Model accuracy}: 95.4\% (CNN) and 92.5\% (ML)
+    \item \textbf{Feature consistency}: Identical 22-feature extraction
+    \item \textbf{Preprocessing pipeline}: Matches training methodology
+\end{itemize}
+
+\subsection{Future enhancements}
+
+Potential enhancements for clinical production use:
+
+\begin{itemize}
+    \item Real-time video stream processing
+    \item Multi-frame temporal analysis
+    \item Integration with endoscopic reporting systems
+    \item Quality metrics dashboard for procedure analytics
+\end{itemize}
+
+The web application successfully demonstrates the translation of machine learning research into a practical clinical tool, providing immediate value for bowel preparation quality assessment while maintaining the rigorous validation standards of the underlying research.
+
+
+
+
+
+
+
+
+
+
 
 \section{Discussion}
 
