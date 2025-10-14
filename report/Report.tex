@@ -249,13 +249,13 @@ Dense + Softmax & 4 units & (None, 4) \\
 \caption{Final model performance comparison}
 \begin{tabular}{lccc}
 \toprule
-\textbf{Method} & \textbf{Accuracy} & \textbf{Training Time} & \textbf{Status} \\
+\textbf{Method} & \textbf{Accuracy} & \textbf{Training time} & \textbf{Status} \\
 \midrule
-\textbf{CNN} & \textbf{95.4\%} & 61 minutes & \textbf{Best Performer} \\
-XGBoost & 92.5\% & 4 minutes & Strong Alternative \\
-Random Forest & 91.9\% & 3 minutes & Competitive \\
-Logistic Regression & 85.0\% & 1 minute & Baseline \\
-SVM & 61.3\% & 2 minutes & Reference \\
+\textbf{CNN} & \textbf{95.4\%} & 38 minutes & \textbf{Best Performer} \\
+XGBoost & 92.5\% & 7.6 s & Strong Alternative \\
+Random Forest & 91.9\% & 3.7 s & Competitive \\
+Logistic Regression & 85.0\% & 2.9 s & Baseline \\
+SVM & 61.3\% & 2.1 s & Reference \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -362,31 +362,6 @@ python examples/nerthus_comparison_plot.py
     \item Unit tests and validation scripts
     \item Professional documentation
 \end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 \section{Web application implementation}
 \label{sec:web_application}
@@ -571,16 +546,6 @@ Potential enhancements for clinical production use:
 \end{itemize}
 
 The web application successfully demonstrates the translation of machine learning research into a practical clinical tool, providing immediate value for bowel preparation quality assessment while maintaining the rigorous validation standards of the underlying research.
-
-
-
-
-
-
-
-
-
-
 
 \section{Discussion}
 
