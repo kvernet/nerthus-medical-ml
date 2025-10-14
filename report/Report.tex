@@ -495,7 +495,7 @@ Texture features are computed from the Gray Level Co-occurrence Matrix (GLCM), w
 
 Color features analyze tissue appearance in different color spaces to distinguish between mucosa and residual materials.
 
-\subsubsection{Hue Mean (HSV color space)}
+\subsubsection{Hue mean (HSV color space)}
 \begin{itemize}
     \item \textbf{Definition}: Average dominant color tone (red, green, blue, etc.)
     \item \textbf{Range}: 0° to 360° (normalized to 0-1 in processing)
@@ -503,7 +503,7 @@ Color features analyze tissue appearance in different color spaces to distinguis
     \item \textbf{Medical Relevance}: Differentiates pinkish mucosa from brown/green stool
 \end{itemize}
 
-\subsubsection{Saturation Mean (HSV color space)}
+\subsubsection{Saturation mean (HSV color space)}
 \begin{itemize}
     \item \textbf{Definition}: Average color purity and intensity
     \item \textbf{Range}: 0 to 1 (0 = grayscale, 1 = fully saturated)
@@ -511,7 +511,7 @@ Color features analyze tissue appearance in different color spaces to distinguis
     \item \textbf{Medical Relevance}: High saturation indicates vivid mucosal colors
 \end{itemize}
 
-\subsubsection{Value Mean (HSV color space)}
+\subsubsection{Value mean (HSV color space)}
 \begin{itemize}
     \item \textbf{Definition}: Average brightness or lightness
     \item \textbf{Range}: 0 to 1 (0 = black, 1 = white)
@@ -519,7 +519,7 @@ Color features analyze tissue appearance in different color spaces to distinguis
     \item \textbf{Medical Relevance}: Indicates illumination quality and tissue visibility
 \end{itemize}
 
-\subsubsection{L* Mean (LAB color space)}
+\subsubsection{L* mean (LAB color space)}
 \begin{itemize}
     \item \textbf{Definition}: Perceptual lightness (designed for human vision)
     \item \textbf{Range}: 0 to 100 (0 = black, 100 = white)
@@ -527,7 +527,7 @@ Color features analyze tissue appearance in different color spaces to distinguis
     \item \textbf{Medical Relevance}: Correlates with human perception of tissue brightness
 \end{itemize}
 
-\subsubsection{a* Mean (LAB color space)}
+\subsubsection{a* mean (LAB color space)}
 \begin{itemize}
     \item \textbf{Definition}: Position between red/magenta and green
     \item \textbf{Range}: -128 to 127 (negative = green, positive = red)
@@ -535,7 +535,7 @@ Color features analyze tissue appearance in different color spaces to distinguis
     \item \textbf{Medical Relevance}: Positive values indicate reddish mucosal tissue
 \end{itemize}
 
-\subsubsection{b* Mean (LAB color space)}
+\subsubsection{b* mean (LAB color space)}
 \begin{itemize}
     \item \textbf{Definition}: Position between blue and yellow
     \item \textbf{Range}: -128 to 127 (negative = blue, positive = yellow)
@@ -724,23 +724,26 @@ nerthus-medical-ml/
 |-- pyproject.toml				# Modern Python packaging
 |-- README.md					# Project description
 |-- report
-|   |-- static					# Static files for the report
+|   |-- images					# Visualization files
 |   |-- Makefile				# Building the report
+|   |-- Report.pdf				# Report PDF file
 |   |-- Report.tex				# Report LateX file
 |   `-- requirements.sh				# Prerequisites for the report
 |-- requirements.txt				# Python project requirements
-|-- setup.py					# Setup
+|-- setup.py					# Setup file
 `-- web
     |-- app.py					# Web app file
+    |-- debug_cnn.py				# CNN debug file
     |-- loader.py				# Model loader
     |-- requirements.txt			# Web app requirements
-    |-- run.py					# Run app with Python
-    `-- static					# Static file for the web app
+    |-- run.py					# Run web app with Python
+    |-- static					# Static file for the web app
+    `-- utils.py				# Web app utilities
 \end{lstlisting}
 
 \subsection{Model configuration details}
 
-\subsubsection{Optimal CNN yyperparameters}
+\subsubsection{Optimal CNN hyperparameters}
 \begin{itemize}
     \item \textbf{Dropout rates}: [0.1, 0.2, 0.3, 0.2]
     \item \textbf{Batch size}: 32

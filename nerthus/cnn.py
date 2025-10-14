@@ -406,7 +406,7 @@ def main():
 
     args = parser.parse_args()
     
-    print("NERTHUS MEDICAL ML - IMPROVED CNN PIPELINE")
+    print("NERTHUS MEDICAL CNN PIPELINE")
     print("=" * 45)
     
     data_path = get_data_path()

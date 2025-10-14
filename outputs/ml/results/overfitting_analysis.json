@@ -1,0 +1,35 @@
+{
+    "overfitting_risk": "Medium",
+    "recommendations": [
+        "Random Forest: Moderate train-test gap (0.081)",
+        "XGBoost: Moderate train-test gap (0.075)"
+    ],
+    "cv_performance": {
+        "Random Forest": {
+            "cv_mean": 0.9349999999999999,
+            "cv_std": 0.003061862178478962,
+            "train_test_gap": 0.08125000000000004
+        },
+        "XGBoost": {
+            "cv_mean": 0.9400000000000001,
+            "cv_std": 0.014031215200402302,
+            "train_test_gap": 0.07499999999999996
+        },
+        "SVM": {
+            "cv_mean": 0.615,
+            "cv_std": 0.02186606960566988,
+            "train_test_gap": 0.009374999999999911
+        },
+        "Logistic Regression": {
+            "cv_mean": 0.8125,
+            "cv_std": 0.032596012026013255,
+            "train_test_gap": -0.015625
+        }
+    },
+    "train_test_gaps": {
+        "Random Forest": 0.08125000000000004,
+        "XGBoost": 0.07499999999999996,
+        "SVM": 0.009374999999999911,
+        "Logistic Regression": -0.015625
+    }
+}

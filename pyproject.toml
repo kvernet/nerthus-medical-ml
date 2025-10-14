@@ -36,7 +36,7 @@ dev = [
 
 [project.scripts]
 nerthus-processor = "nerthus.processor:main"
-nerthus-analyze = "nerthus.analyzer:main"
+nerthus-analysis = "nerthus.analyzer:main"
 nerthus-ml = "nerthus.ml:main"
 nerthus-cnn = "nerthus.cnn:main"
 nerthus = "nerthus.cli:main"

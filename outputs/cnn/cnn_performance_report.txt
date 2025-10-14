@@ -1,0 +1,11 @@
+NERTHUS MEDICAL CNN PERFORMANCE REPORT
+==================================================
+
+MODEL PERFORMANCE SUMMARY:
+------------------------------
+Validation Accuracy: 95.4%
+Final Training Accuracy: 99.8%
+Best Validation Accuracy: 95.4%
+Training samples: 4420
+Validation samples: 1105
+Input shape: (150, 150, 3)
