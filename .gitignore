@@ -1,5 +1,6 @@
 nerthus.egg-info
 __pycache__
+_minted-Report
 
 *.aux
 *.log

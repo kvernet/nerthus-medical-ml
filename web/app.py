@@ -171,7 +171,7 @@ def show_model_performance(cnn_performance, ml_performance):
         'Model': model_names,
         'Accuracy': model_accuracies,
         'Type': ['Traditional ML', 'Traditional ML', 'Traditional ML', 'Traditional ML', 'Deep Learning'],
-        'Training Time (min)': [3, 4, 1, 2, 61]
+        'Training Time (sec)': ['3.7 sec', '7.6 sec', '2.1 sec', '2.9 sec', '38 min']
     }
     df = pd.DataFrame(models_data)
     
@@ -197,7 +197,7 @@ def show_model_performance(cnn_performance, ml_performance):
                         font=dict(color='white', size=12)),
             cells=dict(values=[df.Model, 
                              [f'{acc:.1%}' for acc in df.Accuracy],
-                             [f'{time} min' for time in df['Training Time (min)']],
+                             [f'{time}' for time in df['Training Time (sec)']],
                             ],
                       align='left'))
         ])

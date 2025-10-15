@@ -159,11 +159,6 @@ python examples/nerthus_comparison_plot.py
 
 ---
 
-## Web app
-Try the wep
-
----
-
 ## 📈 Key features
 
 ### 🔬 Medical image analysis
