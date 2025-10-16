@@ -2,6 +2,12 @@
 Plot comparison
 """
 
+import sys
+import os
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from nerthus.utils import ensure_directory, extract_cnn_performance, extract_ml_performance
 import matplotlib.pyplot as plt
 import numpy as np

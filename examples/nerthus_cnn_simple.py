@@ -3,6 +3,12 @@ Simple CNN for Nerthus Medical ML
 Trains CNN and compares with traditional ML results
 """
 
+import sys
+import os
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from nerthus.utils import cnn_generate_text_report, extract_ml_performance, get_data_path
 from nerthus.cnn import NerthusCNN
 

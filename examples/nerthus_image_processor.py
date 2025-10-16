@@ -8,6 +8,12 @@ Image Processor:
     Saving sample images for each class
 """
 
+import sys
+import os
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from nerthus import ImageProcessor, get_data_path, ensure_directory, setup_logging
 
 def main() -> None:

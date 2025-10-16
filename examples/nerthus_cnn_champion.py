@@ -2,6 +2,12 @@
 CHAMPION CNN PIPELINE - Full training with 95.5% configuration
 """
 
+import sys
+import os
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from nerthus.utils import cnn_generate_text_report, ensure_directory, \
     extract_ml_performance, get_data_path
 from nerthus.cnn import NerthusCNN

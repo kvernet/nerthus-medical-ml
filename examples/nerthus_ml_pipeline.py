@@ -8,6 +8,12 @@ Nerthus ML Pipeline:
     Getting and saving the best model
 """
 
+import sys
+import os
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from nerthus import NerthusML
 
 def main():
