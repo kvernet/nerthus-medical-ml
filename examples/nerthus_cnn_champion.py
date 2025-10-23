@@ -65,6 +65,7 @@ def main():
 
     ml_results = extract_ml_performance("outputs/ml/results/ml_performance_report.txt")
     best_ml_model, best_ml_score = max(ml_results.items(), key=lambda x: x[1])
+    best_ml_score *= 100.	# in percentage
     
     output_dir = "outputs/cnn/champion"
     # Initialize champion CNN
@@ -127,21 +128,27 @@ def main():
     best_epoch = np.argmax(history.history['val_accuracy']) + 1
     final_train_accuracy = history.history['accuracy'][-1]
     overfitting_gap = final_train_accuracy - history.history['val_accuracy'][-1]
+    # in percentage
+    best_val_accuracy *= 100.
+    final_train_accuracy *= 100.
+    overfitting_gap *= 100.
+    
     
     print(f"\n🏆 CHAMPION RESULTS:")
-    print(f"   Best Validation Accuracy: {best_val_accuracy:.1%} (epoch {best_epoch})")
-    print(f"   Final Training Accuracy: {final_train_accuracy:.1%}")
-    print(f"   Overfitting Gap: {overfitting_gap:.1%}")
+    print(f"   Best Validation Accuracy: {best_val_accuracy:.1f}% (epoch {best_epoch})")
+    print(f"   Final Training Accuracy: {final_train_accuracy:.1f}%")
+    print(f"   Overfitting Gap: {overfitting_gap:.1f}%")
     
     # Create champion comparison plot
     comparison_path = create_champion_comparison(
         ml_results, best_val_accuracy, output_dir
     )
     
+    improvement = best_val_accuracy - best_ml_score
     print(f"\n🎯 HISTORIC ACHIEVEMENT:")
-    print(f"   🥇 NEW CHAMPION: CNN - {best_val_accuracy:.1%}")
+    print(f"   🥇 NEW CHAMPION: CNN - {best_val_accuracy:.1f}%")
     print(f"   🥈 Previous Best: {best_ml_model} - {best_ml_score}%")
-    print(f"   📈 Improvement: +{100*best_val_accuracy-best_ml_score:.1f}%")
+    print(f"   📈 Improvement: +{improvement:.1f}%")
     
     print(f"\n✅ Champion CNN pipeline complete!")
     print(f"   - Model saved: {model_path}")
